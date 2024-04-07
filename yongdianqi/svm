@@ -1,0 +1,37 @@
+# 导入必要的库
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, classification_report
+import pandas as pd
+
+# 1. 读取CSV文件
+data = pd.read_csv('/kaggle/input/hecheng2/hecheng2.csv')
+# 2. 预处理数据
+# 假设最后一列是目标变量，其余列是特征
+X = data.iloc[:, :-1].values
+y = data.iloc[:, -1].values
+# 处理缺失值（如果有的话）
+# X = pd.DataFrame(X).fillna(method='ffill', axis=0).values
+# 特征标准化
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
+# 3. 划分数据集为训练集和测试集
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# 4. 创建SVM分类器
+svm_model = SVC(kernel='linear')
+# 使用网格搜索进行参数调优
+param_grid = {'C': [0.1, 1, 10, 100], 'gamma': [1, 0.1, 0.01, 0.001], 'kernel': ['linear', 'rbf']}
+grid_search = GridSearchCV(svm_model, param_grid, refit=True, verbose=2)
+grid_search.fit(X_train, y_train)
+# 获取最佳参数模型
+svm_model_best = grid_search.best_estimator_
+# 5. 训练模型
+svm_model_best.fit(X_train, y_train)
+# 6. 在测试集上进行预测
+y_pred = svm_model_best.predict(X_test)
+# 7. 评估模型性能
+accuracy = accuracy_score(y_test, y_pred)
+classification_rep = classification_report(y_test, y_pred)
+print("Accuracy:", accuracy)
+print("\nClassification Report:\n", classification_rep)
